@@ -1,27 +1,45 @@
 #!/usr/bin/env python3
-"""Draw news-image-20261125 v3: a dense one-day front page in the style of
+"""Draw news-image-20261125 v4: a dense one-day front page in the style of
 the top-ranked news-image entries (date as headline, region bar, badges,
-UTC timeline, IN NUMBERS, map with pins + brief dots, red DATE CHECK with
-named exclusions and NOT YET items).
+UTC timeline, THE DAY IN NUMBERS, black ticker bar, map with pins + brief
+dots, red DATE CHECK with named exclusions and NOT YET items).
 
 All 46 stories are real events of Wednesday 25 November 2026 (UTC),
-each verified against a dated source in this session. Strict date rule:
-anything that cannot be verified as 25 Nov is dropped, not included.
-Changes vs the v2 spec, forced by that rule:
-  - IN NUMBERS "47,000" (UN femicide data) DROPPED: the data was first
-    published 24 Nov (UNODC/UNIS press release dated 24 Nov 2026); the
-    UN Women ECA page dated 25 Nov is a republication. Replaced with
-    "19" (civilians killed in Sudan drone strikes, first reported
-    Wed 25 Nov, Reuters).
-  - ALSO #26 "US tells citizens to leave Iran" DROPPED: the alert was
-    issued Tue 24 Nov; its date cannot be cleanly verified as 25 Nov.
-    Replaced in place by "Fuel tanker fire kills 30 in Cairo"
-    (Wed 25 Nov, Egypt health ministry). Region counts shift:
-    MIDDLE EAST 4 -> 3, AFRICA 3 -> 4. Total stays 46.
-  - ALSO #36 reworded: "Gunmen free 10 hostages in Colombia" described
-    the Tue-night release (10 freed Tue); the Wed event is the rescue
-    of the remaining hostages. Now "All hostages freed in Colombia
-    siege" (early Wed 25 Nov, Xinhua/AFP/Le Temps), badge R -> C.
+each verified against a dated source. Strict date rule: anything that
+cannot be verified as 25 Nov is dropped, not included. v3 (kept as the
+base) already fixed four v2 date errors: the Riyadh tower strike, the
+CIA/ODNI breach, the Senegal Africa Cup ruling and US consumer
+confidence were all 24 Nov, not 25 Nov; the UN 47,000 femicide figure
+was first published 24 Nov, so IN NUMBERS uses 19 (Sudan drone strikes,
+first reported Wed 25 Nov); the Iran evacuation alert was issued 24 Nov,
+so ALSO carries the Cairo tanker fire instead; the Colombia hostages
+story is the Wed rescue of the remaining hostages, not the Tue release.
+v4 changes (small, targeted, from the 2026-11-26 top-entry study):
+  - Black ticker bar under THE DAY IN NUMBERS, six verified 25 Nov
+    items in the #1/#50 style (Kospi -6.2%, Shenzhou-24 docks, UK cap
+    +26%, US 20% tariff plan, Cairo tanker fire 30, Java mine flood
+    9 dead). Kospi and the Java flood are strip-only facts, verified
+    25 Nov (Yonhap -6.16%; AP/Xinhua 9 confirmed dead Wed).
+  - DATE CHECK aligned to the four exclusions the top entries share:
+    Nvidia reinstates Huang, Saudi-led strike on Hodeidah, Magyar
+    visits Ukraine, Sinner knee surgery. Each re-verified this session:
+    Huang is 23 Nov, NOT 24 Nov (board voted 22 Nov, announced 23 Nov;
+    the #1 entry's "Tue 24" is wrong, so the box says 23 Nov);
+    Hodeidah is anchored to the Tue 24 evening Saba report (22:39 GMT)
+    and Dawn's Nov 24 report of the Monday telecom strike; Magyar was
+    in Zakarpattia, not Kyiv city, so the item says "visits Ukraine";
+    Sinner's surgery was announced Tue 24 Nov (ATP). NOT YET kept.
+  - IN NUMBERS 6 -> 8, relabelled THE DAY IN NUMBERS: +$606bn (Russia
+    defence budget 2027-29, three-year total, WaPo/dnyuz Nov 25) and
+    +1m (FCC clears 1m SpaceX satellites, Reuters Nov 25). Both are
+    strip-only numbers, verified 25 Nov. Note: $606bn is the three-year
+    figure, not one year; some outlets round it to $609bn.
+  - UTC timestamp under the Shenzhou story only: 00:18 UTC lift-off,
+    03:56 UTC docking (Wikipedia 00:18:52 UTC, NASASpaceflight). This
+    also corrects the timeline's 00:19 -> 00:18. No timestamp on the
+    tariff story (no precise verified USTR announcement time) or the
+    Houthi story (no precise verified claim time) -- guessing a time
+    would break the date rule.
 No network access. Deterministic: identical input -> byte-identical PNG.
 """
 import math
@@ -87,7 +105,7 @@ REGIONS = [
 ]
 
 TIMELINE = [
-    ("00:19", "Shenzhou-24 lifts off"),
+    ("00:18", "Shenzhou-24 lifts off"),
     ("00:30", "Australia CPI 4.9% beats forecast"),
     ("03:56", "Shenzhou-24 docks at Tiangong"),
     ("13:30", "US PCE 3.8%; GDP revised to 4.3%"),
@@ -96,37 +114,42 @@ TIMELINE = [
 ]
 
 NUMBERS = [
-    ("14", "trading partners face new US tariffs"),
+    ("14", "partners hit by new US tariffs"),
     ("$227m", "of meth seized in Nigeria"),
-    ("1.3m", "Hong Kong ticketing users' data leaked"),
+    ("1.3m", "Hong Kong users' data leaked"),
     ("$50bn", "EU quantum investment plan"),
-    ("19", "civilians killed in Sudan drone strikes"),
+    ("19", "civilians killed in Sudan strikes"),
     ("4", "tankers hit by mines off Hormuz"),
+    ("$606bn", "Russia defence budget, 2027-29"),
+    ("1m", "SpaceX satellites cleared by FCC"),
 ]
 
 # badge codes: C CONFIRMED (2+ outlets), O OFFICIAL, R REPORTED (single
 # outlet), CL CLAIM (attributed). No ONGOING level.
-# big: (headline, badge, summary, why_it_matters, sources, scene, pin)
+# big: (headline, badge, summary, why_it_matters, sources, scene, pin, utc)
+# utc is a verified UTC timestamp line, or "" when no precise time is
+# verified (tariff: no verified USTR announcement time; Houthi: no
+# verified precise claim time -- both left blank, never guessed).
 BIG3 = [
     ("US proposes tariffs on 14 partners", "C",
      "USTR proposes duties of up to 35% on 14 economies, citing excess "
      "capacity. Nothing takes effect before the hearings.",
      "WHY IT MATTERS: 14 partners hit at once.",
      "Sources: USTR \u00b7 Reuters \u00b7 AP",
-     "tariffs", (38.9, -77.0)),
+     "tariffs", (38.9, -77.0), ""),
     ("Shenzhou-24 carries first foreign astronaut", "C",
-     "Shenzhou-24 docks at Tiangong, carrying Pakistan's Muhammad Zeeshan "
-     "Ali, the first non-Chinese astronaut on a Chinese station.",
+     "Shenzhou-24 docks at Tiangong with Pakistan's Muhammad Zeeshan "
+     "Ali, the first foreign astronaut aboard.",
      "WHY IT MATTERS: A first non-Chinese astronaut.",
      "Sources: Xinhua \u00b7 AP \u00b7 Reuters",
-     "rocket", (40.9, 100.3)),
+     "rocket", (40.9, 100.3), "00:18 UTC LIFT-OFF \u00b7 03:56 UTC DOCKING"),
     ("Houthis claim new strikes on Riyadh and Ras Tanura", "CL",
      "Houthi spokesman Yahya Saree names Riyadh's financial district and "
      "the Ras Tanura refinery as targets; Saudi air defences down four "
      "Houthi drones at Ras Tanura.",
      "WHY IT MATTERS: Oil and the capital, hit in one week.",
      "Sources: DW \u00b7 France 24 \u00b7 Al Jazeera",
-     "refinery", (26.6, 50.2)),
+     "refinery", (26.6, 50.2), ""),
 ]
 
 # small cards: (headline, badge, scene kind, data label, pin)
@@ -193,15 +216,18 @@ ALSO = [
     ("Sinner doubtful for Australian Open", "C", (-37.8, 145.0)),
 ]
 
-# DATE CHECK: (date, item) — every item verified older than 25 Nov 2026
+# DATE CHECK: (date, item) — every item verified older than 25 Nov 2026.
+# The four exclusions the current top entries share, each re-verified:
+# Huang 23 Nov (board voted 22 Nov, announced 23 Nov -- the "Tue 24"
+# label on the #1 entry is wrong); Hodeidah 24 Nov (Saba report of the
+# port attack, Tue evening 22:39 GMT; Dawn's Nov 24 report of the
+# Monday telecom strike); Magyar 24 Nov (in Zakarpattia, not Kyiv
+# city); Sinner surgery announced Tue 24 Nov (ATP).
 DATE_CHECK = [
-    ("24 Nov", "PIF Tower in Riyadh hit; 11 injured"),
-    ("24 Nov", "CIA and ODNI breach first reported"),
-    ("24 Nov", "CAS gives Senegal the Africa Cup title"),
-    ("24 Nov", "US consumer confidence jumps to 103.3"),
-    ("23 Nov", "Nvidia jumps 31.5% as Huang returns"),
-    ("23 Nov", "COP31 climate talks collapse with no deal"),
-    ("22 Nov", "Sudan drone strikes kill children in Khartoum"),
+    ("23 Nov", "Nvidia reinstates Jensen Huang"),
+    ("24 Nov", "Saudi-led strike on Hodeidah"),
+    ("24 Nov", "Magyar visits Ukraine"),
+    ("24 Nov", "Sinner has knee surgery"),
 ]
 
 # NOT YET: verified future events
@@ -302,13 +328,13 @@ def draw_big_scene(d, kind, x, y, w, h):
         d.rectangle([x + 52, y + 0, x + 58, y + 8], fill="white")
         d.rectangle([x + 38, y + 34, x + 44, y + h - 6], fill=NAVY)
         d.rectangle([x + 66, y + 34, x + 72, y + h - 6], fill=NAVY)
-        # crates with % tags
+        # crates with % tags (kept clear of the UP TO 35% label above)
         for i, tag in enumerate(("20%", "35%", "15%")):
             cx0 = x + 120 + i * 62
-            d.rectangle([cx0, y + h - 30, cx0 + 48, y + h - 6],
+            d.rectangle([cx0, y + h - 26, cx0 + 48, y + h - 6],
                         fill=(214, 178, 110), outline=(120, 85, 40), width=1)
-            d.text((cx0 + 8, y + h - 24), tag, font=font(SANS_B, 12), fill=INK)
-        d.text((x + 120, y + 8), "UP TO 35%", font=font(SANS_B, 14),
+            d.text((cx0 + 8, y + h - 20), tag, font=font(SANS_B, 12), fill=INK)
+        d.text((x + 120, y + 2), "UP TO 35%", font=font(SANS_B, 14),
                fill=(240, 200, 60))
     elif kind == "rocket":
         d.rectangle([x, y, x + w, y + h], fill=(12, 20, 40))
@@ -330,9 +356,9 @@ def draw_big_scene(d, kind, x, y, w, h):
                   fill=RED)
         d.polygon([(x + 62, y + 44), (x + 72, y + 44), (x + 67, y + h - 4)],
                   fill=(255, 170, 40))
-        d.text((x + 100, y + 8), "1ST FOREIGN", font=font(SANS_B, 12),
+        d.text((x + 82, y + 8), "1ST FOREIGN", font=font(SANS_B, 12),
                fill="white")
-        d.text((x + 100, y + 24), "ASTRONAUT", font=font(SANS_B, 12),
+        d.text((x + 82, y + 24), "ASTRONAUT", font=font(SANS_B, 12),
                fill="white")
     elif kind == "refinery":
         d.rectangle([x, y, x + w, y + h], fill=(28, 38, 52))
@@ -352,7 +378,7 @@ def draw_big_scene(d, kind, x, y, w, h):
                    width=2)
             d.line([(dx - 8, dy + 4), (dx + 8, dy + 4)], fill=(20, 20, 20),
                    width=2)
-        d.text((x + 170, y + 6), "4 DRONES DOWNED", font=font(SANS_B, 13),
+        d.text((x + 152, y + 6), "4 DRONES DOWNED", font=font(SANS_B, 12),
                fill=(255, 120, 90))
 
 
@@ -451,9 +477,11 @@ def main():
     f_tl = font(SANS_B, 11)
     f_tlt = font(SANS, 10)
     f_num = font(SANS_B, 20)
+    f_num18 = font(SANS_B, 18)
     f_numl = font(SANS, 9)
     f_big_h = font(SANS_B, 14)
     f_big_s = font(SANS, 10)
+    f_ts = font(SANS_B, 10)
     f_why = font(SANS_B, 10)
     f_src = font(SANS, 9)
     f_card = font(SANS_B, 10)
@@ -515,33 +543,44 @@ def main():
             yy += 11
     assert yy <= 180, "timeline overflow"
 
-    # ---- IN NUMBERS ----
+    # ---- THE DAY IN NUMBERS (8) ----
     d.line([(M, 184), (W - M, 184)], fill=INK, width=1)
-    d.text((M, 190), "IN NUMBERS", font=f_tl, fill=RED)
-    num_x = M + 108
+    d.text((M, 190), "THE DAY IN NUMBERS", font=f_tl, fill=RED)
+    num_x = M + 140
     num_w = (W - M - num_x) / len(NUMBERS)
     for i, (val, label) in enumerate(NUMBERS):
         x = num_x + i * num_w
-        d.text((x, 188), val, font=f_num, fill=INK)
+        d.text((x, 185), val, font=f_num18, fill=INK)
         lines = wrap(d, label, f_numl, num_w - 8)
-        yy = 188 + 22
+        yy = 204
         for line in lines[:2]:
             d.text((x, yy), line, font=f_numl, fill=GREY)
-            yy += 10
-    d.line([(M, 232), (W - M, 232)], fill=INK, width=1)
+            yy += 9
+    d.line([(M, 224), (W - M, 224)], fill=INK, width=1)
+
+    # ---- black ticker bar (top-entry style) ----
+    tick = ("25 NOV  |  ASIA Kospi -6.2%  \u00b7  SPACE Shenzhou-24 docks  "
+            "\u00b7  UK Energy cap +26%  \u00b7  US 20% tariff plan  \u00b7  "
+            "EGYPT Cairo tanker fire 30  \u00b7  JAVA Mine flood 9 dead")
+    d.rectangle([M, 226, W - M, 242], fill=(20, 20, 20))
+    d.text((M + 8, 229), fit(d, tick, font(SANS_B, 10), CW - 16),
+           font=font(SANS_B, 10), fill="white")
 
     # ---- big three ----
-    big_y = 240
+    big_y = 248
     big_w = (CW - 2 * 12) // 3
-    for i, (headline, bdg, summary, why, sources, scene, _pin) in enumerate(BIG3):
+    for i, (headline, bdg, summary, why, sources, scene, _pin, ts) in enumerate(BIG3):
         x = M + i * (big_w + 12)
-        draw_big_scene(d, scene, x, big_y, big_w, 50)
+        draw_big_scene(d, scene, x, big_y, big_w, 44)
         badge(d, x + big_w - 20, big_y + 4, bdg, f_badge)
         hl = wrap(d, headline, f_big_h, big_w - 4)
-        yy = big_y + 54
+        yy = big_y + 48
         for line in hl[:2]:
             d.text((x + 2, yy), line, font=f_big_h, fill=INK)
             yy += 15
+        if ts:
+            d.text((x + 2, yy), ts, font=f_ts, fill=RED)
+            yy += 11
         sl = wrap(d, summary, f_big_s, big_w - 4)
         for line in sl[:3]:
             d.text((x + 2, yy), line, font=f_big_s, fill=(40, 40, 40))
@@ -642,14 +681,18 @@ def main():
         dw = d.textlength(date + "  ", font=font(SANS_B, 10))
         txt = fit(d, item, f_dc, dc_x1 - dc_x0 - 16 - dw)
         d.text((dc_x0 + 8 + dw, yy), txt, font=f_dc, fill=INK)
-        yy += 11
+        yy += 13
     yy += 2
     d.text((dc_x0 + 8, yy), "NOT YET:", font=font(SANS_B, 10), fill=RED)
     yy += 11
     for item in NOT_YET:
         d.text((dc_x0 + 8, yy), item, font=f_dc, fill=INK)
         yy += 10
-    yy += 1
+    yy += 2
+    d.text((dc_x0 + 8, yy),
+           "Every story happened or was first reported Wed 25 Nov 2026 (UTC).",
+           font=font(SANS, 10), fill=GREY)
+    yy += 11
     d.text((dc_x0 + 8, yy), "A story dated before today cannot win today.",
            font=font(SANS, 10), fill=GREY)
     assert yy + 12 <= dc_y1, "date check overflow"
